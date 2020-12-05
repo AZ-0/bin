@@ -3,6 +3,7 @@ from pathlib import Path
 from bin import root, config
 from bin.models import Snippet
 from bin.utils import parse_language, parse_extension
+from bin.highlight import highlight
 
 
 @bt.route('/', method='GET')
@@ -46,7 +47,7 @@ def post_new():
     except ValueError as exc:
         raise bt.HTTPError(400, str(exc))
 
-    snippet = Snippet.create(code, max(maxusage, -1), lifetime)
+    snippet = Snippet.create(code, max(maxusage, -1), lifetime, "")
     bt.redirect(f'/{snippet.id}.{ext}')
 
 
@@ -58,7 +59,8 @@ def get_html(snippet_id, ext=None):
     except KeyError:
         raise bt.HTTPError(404, "Snippet not found")
     language = parse_language(ext)
-    return bt.template('highlight', code=snippet.code, language=language)
+    codehl = highlight(snippet.code, language)
+    return bt.template('highlight', codehl=codehl)
 
 
 @bt.route('/raw/<snippet_id>', method='GET')
